@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -103,7 +103,9 @@ const TeamDetails = () => {
               <div className="flex items-start gap-4 mb-4">
                 <Avatar name={member.name} size="lg" className="ring-4 ring-slate-50" />
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900 leading-tight">{member.name}</h3>
+                  <Link to={`/profile/${member._id}`} className="hover:underline text-indigo-600">
+                    <h3 className="font-bold text-lg leading-tight">{member.name}</h3>
+                  </Link>
                   <p className="text-xs text-slate-500 mb-1">{member.email}</p>
                   <Badge variant="purple" className="mt-1 text-[10px]">{role}</Badge>
                 </div>

@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const { createStartup, getStartups, getStartupById, updateStartup, deleteStartup, bookmarkStartup, unbookmarkStartup, getSavedStartups } = require('../controllers/startupController');
 const { getStartupRequests } = require('../controllers/joinRequestController');
@@ -7,8 +7,21 @@ const { requireAuth } = require('../middleware/authMiddleware');
 
 router.get('/bookmarked', requireAuth, getSavedStartups);
 
+const { check } = require('express-validator');
+const { validateRequest } = require('../middleware/validator');
+
 router.route('/')
-  .post(requireAuth, createStartup)
+  .post(
+    requireAuth,
+    [
+      check('title', 'Title is required').not().isEmpty(),
+      check('description', 'Description is required').not().isEmpty(),
+      check('domain', 'Domain is required').not().isEmpty(),
+      check('teamSize', 'Team size must be a number').isNumeric()
+    ],
+    validateRequest,
+    createStartup
+  )
   .get(getStartups);
 
 router.route('/:id')

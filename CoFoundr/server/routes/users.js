@@ -1,10 +1,11 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
-const { getProfile, updateProfile, uploadResume, deleteResume } = require('../controllers/userController');
+const { getProfile, updateProfile, uploadResume, deleteResume, getUserById } = require('../controllers/userController');
 const { requireAuth } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 router.get('/profile', requireAuth, getProfile);
+router.get('/:id', requireAuth, getUserById);
 router.put('/profile', requireAuth, updateProfile);
 
 router.post('/profile/resume', requireAuth, upload.single('resume'), uploadResume);

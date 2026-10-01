@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const app = require('./app');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
@@ -11,8 +11,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
   }
 });
 

@@ -1,23 +1,25 @@
-﻿const multer = require('multer');
+const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Sanitize filename
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    // Sanitize filename to avoid weird characters in public_id
     const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
-    cb(null, 'resume-' + uniqueSuffix + '-' + sanitizedName);
-  }
+    return {
+      folder: 'cofoundr_resumes',
+      resource_type: 'raw', // Use raw for PDFs and docs
+      public_id: 'resume-' + Date.now() + '-' + sanitizedName
+    };
+  },
 });
 
 const fileFilter = (req, file, cb) => {

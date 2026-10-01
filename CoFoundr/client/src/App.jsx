@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import CommonLayout from './layouts/CommonLayout';
 import Home from './pages/Home';
@@ -24,6 +24,7 @@ import Onboarding from './pages/Onboarding';
 import SavedStartups from './pages/SavedStartups';
 import ProtectedRoute from './components/ProtectedRoute';
 import api from './services/api';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Resource Pages
 import HelpCenter from './pages/HelpCenter';
@@ -60,8 +61,10 @@ function App() {
         <Route path="contact" element={<ContactUs />} />
         
         {/* Protected Routes */}
+        <Route path="admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
         <Route path="onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="startups/create" element={<ProtectedRoute><CreateStartup /></ProtectedRoute>} />
         <Route path="startups/:id/edit" element={<ProtectedRoute><EditStartup /></ProtectedRoute>} />

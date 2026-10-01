@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -44,7 +44,7 @@ const StartupDetails = () => {
   const handleJoin = async (e) => {
     e.preventDefault();
     try {
-      await api.post(`/startups/${id}/join`, { message: joinMessage });
+      await api.post(`/join-requests`, { startupId: id, message: joinMessage });
       setRequestSent(true);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to send request');
@@ -176,7 +176,7 @@ const StartupDetails = () => {
                 <Link to={`/startups/${id}/requests`}>
                   <Button className="w-full mb-3 shadow-sm">Manage Applications</Button>
                 </Link>
-                <Link to={`/teams/${id}`}>
+                <Link to={`/startups/${id}/team`}>
                   <Button className="w-full mb-3 bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-200">Open Team Workspace</Button>
                 </Link>
                 <Button className="w-full text-rose-600 bg-rose-50 hover:bg-rose-100 border-none" onClick={handleDelete}>Delete Startup</Button>
@@ -187,7 +187,7 @@ const StartupDetails = () => {
                   <svg className="w-5 h-5 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                   You are a member of this startup
                 </div>
-                <Link to={`/teams/${id}`}>
+                <Link to={`/startups/${id}/team`}>
                   <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-200" size="lg">Open Team Workspace</Button>
                 </Link>
               </div>

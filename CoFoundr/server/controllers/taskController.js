@@ -1,6 +1,8 @@
-﻿const Task = require('../models/Task');
+const Task = require('../models/Task');
 const Team = require('../models/Team');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
 
 exports.createTask = async (req, res) => {
   try {
@@ -38,6 +40,15 @@ exports.createTask = async (req, res) => {
         message: `You have been assigned a new task: ${title}`,
         relatedId: task._id
       });
+
+      const user = await User.findById(assignedTo);
+      if (user) {
+        await sendEmail({
+          to: user.email,
+          subject: 'New Task Assigned - CoFoundr',
+          text: `Hello ${user.name},\n\nYou have been assigned a new task: "${title}".\n\nBest,\nCoFoundr Team`,
+        });
+      }
     }
 
     res.status(201).json({ success: true, task });
@@ -128,6 +139,15 @@ exports.updateTask = async (req, res) => {
           message: `You have been assigned to task: ${task.title}`,
           relatedId: task._id
         });
+
+        const user = await User.findById(assignedTo);
+        if (user) {
+          await sendEmail({
+            to: user.email,
+            subject: 'New Task Assigned - CoFoundr',
+            text: `Hello ${user.name},\n\nYou have been assigned to a task: "${task.title}".\n\nBest,\nCoFoundr Team`,
+          });
+        }
       }
       task.assignedTo = assignedTo;
     }

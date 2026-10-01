@@ -1,7 +1,9 @@
-﻿const JoinRequest = require('../models/JoinRequest');
+const JoinRequest = require('../models/JoinRequest');
 const Startup = require('../models/Startup');
 const Team = require('../models/Team');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
 
 exports.createRequest = async (req, res) => {
   try {
@@ -52,6 +54,24 @@ exports.createRequest = async (req, res) => {
       userId: req.user._id,
       message
     });
+
+    // Send in-app notification to the startup owner
+    await Notification.create({
+      receiverId: startup.createdBy,
+      type: 'NEW_JOIN_REQUEST',
+      message: `${req.user.name} applied to join ${startup.title}`,
+      relatedId: startup._id
+    });
+
+    // Send email to the startup owner
+    const owner = await User.findById(startup.createdBy);
+    if (owner) {
+      await sendEmail({
+        to: owner.email,
+        subject: `New Application for ${startup.title} - CoFoundr`,
+        text: `Hello ${owner.name},\n\n${req.user.name} has submitted an application to join your startup "${startup.title}".\n\nLog in to your CoFoundr dashboard to review their message and accept or reject the request.\n\nBest,\nCoFoundr Team`,
+      });
+    }
 
     res.status(201).json({ success: true, request });
   } catch (error) {
@@ -138,6 +158,15 @@ exports.updateRequestStatus = async (req, res) => {
       message: `Your join request for ${startup.title} was ${status}`,
       relatedId: startup._id
     });
+
+    const user = await User.findById(request.userId);
+    if (user) {
+      await sendEmail({
+        to: user.email,
+        subject: `Join Request ${status === 'accepted' ? 'Accepted' : 'Rejected'} - CoFoundr`,
+        text: `Hello ${user.name},\n\nYour join request for the startup "${startup.title}" was ${status}.\n\nBest,\nCoFoundr Team`,
+      });
+    }
 
     res.json({ success: true, request });
   } catch (error) {

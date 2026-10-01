@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const healthRoutes = require('./health');
 const authRoutes = require('./auth');
@@ -9,6 +9,8 @@ const teamsRoutes = require('./teams');
 const tasksRoutes = require('./tasks');
 const notificationsRoutes = require('./notifications');
 const chatRoutes = require('./chat');
+const adminRoutes = require('./admin');
+const reviewsRoutes = require('./reviews');
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
@@ -19,5 +21,7 @@ router.use('/teams', teamsRoutes);
 router.use('/tasks', tasksRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/chat', chatRoutes);
+router.use('/admin', adminRoutes);
+router.use('/reviews', reviewsRoutes);
 
 module.exports = router;

@@ -1,28 +1,56 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import api from '../services/api';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Avatar from '../components/ui/Avatar';
+import { AuthContext } from '../context/AuthContext';
 
 const Profile = () => {
+  const { id } = useParams();
+  const { user: currentUser } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
+  const [reviewsData, setReviewsData] = useState({ reviews: [], averageRating: 0 });
   const [loading, setLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', startupId: '' });
+  const [myStartups, setMyStartups] = useState([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get('/users/profile');
+        const endpoint = id ? `/users/${id}` : '/users/profile';
+        const res = await api.get(endpoint);
         if (res.data.success) {
           setProfile(res.data.user);
+          
+          // Fetch reviews
+          const profileId = id || res.data.user._id;
+          const reviewsRes = await api.get(`/reviews/user/${profileId}`);
+          if (reviewsRes.data.success) {
+            setReviewsData(reviewsRes.data.data);
+          }
+
+          // If looking at another user, fetch my startups to select from for review
+          if (id && id !== currentUser._id) {
+            const startupsRes = await api.get('/startups/my-startups');
+            if (startupsRes.data.success) {
+              setMyStartups(startupsRes.data.startups);
+              if (startupsRes.data.startups.length > 0) {
+                setReviewForm(prev => ({ ...prev, startupId: startupsRes.data.startups[0]._id }));
+              }
+            }
+          }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
       setLoading(false);
     };
     fetchProfile();
-  }, []);
+  }, [id, currentUser._id]);
 
   if (loading) return <LoadingSpinner fullScreen />;
   if (!profile) return <div className="text-center mt-20 text-slate-500">Error loading profile.</div>;
@@ -49,7 +77,7 @@ const Profile = () => {
             <p className="font-semibold text-slate-900 truncate max-w-[200px]">{resumeObj.fileName || 'Resume.pdf'}</p>
           </div>
         </div>
-        <a href={`http://localhost:5000${resumeObj.url}`} target="_blank" rel="noopener noreferrer">
+        <a href={resumeObj.url.startsWith('http') ? resumeObj.url : `http://localhost:5000${resumeObj.url}`} target="_blank" rel="noopener noreferrer">
           <Button variant="secondary" size="sm">View Resume</Button>
         </a>
       </div>
@@ -62,9 +90,13 @@ const Profile = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-end mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Profile</h1>
-        <Link to="/profile/edit">
-          <Button variant="secondary" className="shadow-sm">Edit Profile</Button>
-        </Link>
+        {!id || id === currentUser._id ? (
+          <Link to="/profile/edit">
+            <Button variant="secondary" className="shadow-sm">Edit Profile</Button>
+          </Link>
+        ) : (
+          <Button variant="primary" className="shadow-sm" onClick={() => setShowReviewModal(true)}>Leave Review</Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -148,8 +180,93 @@ const Profile = () => {
               <p className="text-slate-400 italic text-sm">Not specified</p>
             )}
           </Card>
+          <Card>
+            <h3 className="text-lg font-bold text-slate-900 mb-3 border-b border-slate-100 pb-2">Reviews ({reviewsData.averageRating} ★)</h3>
+            <div className="space-y-4">
+              {reviewsData.reviews.length > 0 ? (
+                reviewsData.reviews.map(review => (
+                  <div key={review._id} className="border-b border-slate-100 pb-3">
+                    <div className="flex justify-between">
+                      <div className="font-semibold">{review.reviewer?.name || 'Unknown'}</div>
+                      <div className="text-indigo-600">{review.rating} ★</div>
+                    </div>
+                    <div className="text-xs text-slate-400 mb-2">{review.startupId?.title}</div>
+                    <p className="text-sm text-slate-700">{review.comment}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-400 italic text-sm">No reviews yet.</p>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
+
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4">Leave a Review for {profile.name}</h2>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await api.post('/reviews', {
+                  reviewee: profile._id,
+                  startupId: reviewForm.startupId,
+                  rating: reviewForm.rating,
+                  comment: reviewForm.comment
+                });
+                setShowReviewModal(false);
+                // Refresh reviews
+                const reviewsRes = await api.get(`/reviews/user/${profile._id}`);
+                if (reviewsRes.data.success) {
+                  setReviewsData(reviewsRes.data.data);
+                }
+              } catch (err) {
+                alert(err.response?.data?.message || 'Failed to submit review');
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Select Startup/Team</label>
+                  <select 
+                    className="w-full border rounded-lg p-2"
+                    value={reviewForm.startupId}
+                    onChange={(e) => setReviewForm({...reviewForm, startupId: e.target.value})}
+                    required
+                  >
+                    <option value="" disabled>Select a startup</option>
+                    {myStartups.map(s => (
+                      <option key={s._id} value={s._id}>{s.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Rating (1-5)</label>
+                  <input 
+                    type="number" min="1" max="5" required
+                    className="w-full border rounded-lg p-2"
+                    value={reviewForm.rating}
+                    onChange={(e) => setReviewForm({...reviewForm, rating: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Comment</label>
+                  <textarea 
+                    rows="3"
+                    className="w-full border rounded-lg p-2"
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
+                  ></textarea>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <Button type="button" variant="secondary" onClick={() => setShowReviewModal(false)}>Cancel</Button>
+                <Button type="submit" variant="primary">Submit Review</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

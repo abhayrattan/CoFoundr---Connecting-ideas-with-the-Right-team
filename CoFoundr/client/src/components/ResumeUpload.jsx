@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Button from './ui/Button';
 
@@ -124,8 +124,8 @@ const ResumeUpload = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <a href={`http://localhost:5000${resumeObj.url}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">View</a>
-            <a href={`http://localhost:5000${resumeObj.url}`} download className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">Download</a>
+            <a href={resumeObj.url.startsWith('http') ? resumeObj.url : `http://localhost:5000${resumeObj.url}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">View</a>
+            <a href={resumeObj.url.startsWith('http') ? resumeObj.url : `http://localhost:5000${resumeObj.url}`} download className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">Download</a>
             <label className="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
               Replace
               <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={(e) => {
