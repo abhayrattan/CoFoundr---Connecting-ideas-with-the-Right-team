@@ -63,7 +63,7 @@ CoFoundr/
     ├── middleware/         # Auth & Upload Middleware
     ├── models/             # Mongoose Schemas & Data Models
     ├── routes/             # Express API Routes
-    └── utils/              # Helper Functions
+    └── utils/              # Email & Helper Utilities
 ```
 
 ---
